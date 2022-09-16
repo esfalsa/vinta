@@ -13,63 +13,72 @@
 
 	type Nation = {
 		name: string;
-		salt: string;
-		nonce: number[];
-		password: number[];
+		password: string;
 	};
 
-	let nations: { [key: string]: Nation };
+	let nations: { [id: string]: Nation };
 
 	let masterPassword = 'hunter2';
 
 	let isOpen = false;
 
 	onMount(async () => {
-		nations = (await localForage.getItem('nations')) ?? {};
-		console.log('nations', nations);
+		const encryptedNations = (await localForage.getItem('nations')) ?? [];
+		const salt = await localForage.getItem('salt');
+		const nonce = await localForage.getItem('nonce');
+
+		nations =
+			JSON.parse(
+				await invoke('decrypt', {
+					data: encryptedNations,
+					password: masterPassword,
+					salt: salt,
+					nonce: nonce
+				})
+			) ?? {};
 	});
 
-	async function addNation(name: string, nationPassword: string) {
-		const id = name.toLowerCase();
+	async function updateEncryptedNations(nations: { [id: string]: Nation }) {
+		let salt = await localForage.getItem('salt');
+		if (!salt) {
+			salt = await invoke('generate_salt');
+			localForage.setItem('salt', salt);
+		}
 
-		const salt = nations[id]?.salt ?? (await invoke<string>('generate_salt'));
-		const [password, nonce] = await invoke<[number[], number[]]>('encrypt', {
-			data: nationPassword,
+		const [encrypted, nonce] = await invoke<[number[], number[]]>('encrypt', {
+			data: JSON.stringify(nations),
 			password: masterPassword,
 			salt: salt
 		});
+		await localForage.setItem('nations', encrypted);
+		await localForage.setItem('nonce', nonce);
+	}
 
-		nations[id] = {
+	async function addNation(name: string, password: string) {
+		await updateEncryptedNations({
+			...nations,
+			[name.toLowerCase()]: {
+				name: name,
+				password: password
+			}
+		});
+
+		nations[name.toLowerCase()] = {
 			name: name,
-			salt: salt,
-			nonce: nonce,
 			password: password
 		};
-		nations = nations;
-
-		await localForage.setItem('nations', nations);
 	}
 
-	async function removeNation(nation: string) {
-		delete nations[nation.toLowerCase()];
-		nations = nations;
+	async function removeNation(id: string) {
+		delete nations[id];
 
-		await localForage.setItem('nations', nations);
+		await updateEncryptedNations(nations);
+		nations = nations;
 	}
 
-	async function getPassword(nation: string) {
-		const id = nation.toLowerCase();
-
+	function getPassword(id: string) {
 		if (!(id in nations)) throw 'Nation was not found.';
-
-		const { salt, nonce, password } = nations[id];
-
-		return await invoke('decrypt', {
-			data: password,
-			salt: salt,
-			nonce: nonce,
-			password: masterPassword
-		});
+		return nations[id].password;
 	}
 
 	const { form } = createForm({
@@ -122,10 +131,11 @@
 		<div>
 			{#each Object.entries(nations) as [id, nation]}
 				<div>
-					<button on:click={() => removeNation(nation.name)}>[x]</button>
+					<button on:click={() => removeNation(id)}>[x]</button>
 					<button on:click={async () => await open(`https://nationstates.net/${id}`)}
 						><strong>{nation.name}</strong></button
 					>
+					{getPassword(id)}
 				</div>
 			{/each}
 		</div>
