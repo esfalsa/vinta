@@ -7,14 +7,17 @@
 		"distDir": "../build"
 	},
 	"package": {
-		"productName": "vinta",
-		"version": "0.1.0"
+		"productName": "Vinta"
 	},
 	"tauri": {
-		"allowlist": {},
+		"allowlist": {
+			"shell": {
+				"open": true
+			}
+		},
 		"bundle": {
 			"active": true,
-			"category": "DeveloperTool",
+			"category": "Game",
 			"copyright": "",
 			"deb": {
 				"depends": []
