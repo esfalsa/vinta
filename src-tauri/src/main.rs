@@ -4,7 +4,10 @@ use chacha20poly1305::{
 	aead::{ Aead, AeadCore, KeyInit, OsRng, generic_array::GenericArray },
 	ChaCha20Poly1305,
 };
-use argon2::{ password_hash::{ SaltString }, Argon2 };
+use argon2::{
+	password_hash::{ SaltString, PasswordHash, PasswordHasher, PasswordVerifier },
+	Argon2,
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -46,6 +49,22 @@ fn generate_salt() -> Result<String, Error> {
 	Ok(SaltString::generate(&mut OsRng).to_string())
 }
 
+#[tauri::command]
+fn hash_password(password: &[u8]) -> Result<String, Error> {
+	let salt = SaltString::generate(&mut OsRng);
+	let argon2 = Argon2::default();
+
+	Ok(argon2.hash_password(password, &salt)?.to_string())
+}
+
+#[tauri::command]
+fn verify_password(password: &[u8], hash: String) -> Result<bool, Error> {
+	let parsed_hash = PasswordHash::new(&hash)?;
+	let argon2 = Argon2::default();
+
+	Ok(argon2.verify_password(password, &parsed_hash).is_ok())
+}
+
 fn get_key(password: &[u8], salt: &[u8]) -> Result<[u8; 32], Error> {
 	let argon2 = Argon2::default();
 	let mut hash = [0u8; 32];
@@ -58,7 +77,15 @@ fn get_key(password: &[u8], salt: &[u8]) -> Result<[u8; 32], Error> {
 fn main() {
 	tauri::Builder
 		::default()
-		.invoke_handler(tauri::generate_handler![encrypt, decrypt, generate_salt])
+		.invoke_handler(
+			tauri::generate_handler![
+				encrypt,
+				decrypt,
+				generate_salt,
+				hash_password,
+				verify_password
+			]
+		)
 		.run(tauri::generate_context!())
 		.expect("error while running tauri application");
 }

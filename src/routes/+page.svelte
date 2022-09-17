@@ -1,91 +1,54 @@
 <script lang="ts">
+	import { password } from '$lib/stores';
 	import { invoke } from '@tauri-apps/api/tauri';
-	import { open } from '@tauri-apps/api/shell';
 	import { onMount } from 'svelte';
-	import {
-		Dialog,
-		DialogOverlay,
-		DialogTitle,
-		DialogDescription
-	} from '@rgossiaux/svelte-headlessui';
-	import { createForm } from 'felte';
 	import * as localForage from 'localforage';
+	import { createForm } from 'felte';
+	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
 
-	type Nation = {
-		name: string;
-		password: string;
-	};
-
-	let nations: { [id: string]: Nation };
-
-	let masterPassword = 'hunter2';
-
-	let isOpen = false;
+	let hasPassword: boolean;
 
 	onMount(async () => {
-		const encryptedNations = (await localForage.getItem('nations')) ?? [];
-		const salt = await localForage.getItem('salt');
-		const nonce = await localForage.getItem('nonce');
-
-		nations =
-			JSON.parse(
-				await invoke('decrypt', {
-					data: encryptedNations,
-					password: masterPassword,
-					salt: salt,
-					nonce: nonce
-				})
-			) ?? {};
+		hasPassword = !!(await localForage.getItem('password'));
 	});
 
-	async function updateEncryptedNations(nations: { [id: string]: Nation }) {
-		let salt = await localForage.getItem('salt');
-		if (!salt) {
-			salt = await invoke('generate_salt');
-			localForage.setItem('salt', salt);
-		}
+	type LoginFields = { password: string };
 
-		const [encrypted, nonce] = await invoke<[number[], number[]]>('encrypt', {
-			data: JSON.stringify(nations),
-			password: masterPassword,
-			salt: salt
-		});
-		await localForage.setItem('nations', encrypted);
-		await localForage.setItem('nonce', nonce);
-	}
-
-	async function addNation(name: string, password: string) {
-		await updateEncryptedNations({
-			...nations,
-			[name.toLowerCase()]: {
-				name: name,
-				password: password
-			}
-		});
-
-		nations[name.toLowerCase()] = {
-			name: name,
-			password: password
-		};
-	}
-
-	async function removeNation(id: string) {
-		delete nations[id];
-
-		await updateEncryptedNations(nations);
-		nations = nations;
-	}
-
-	function getPassword(id: string) {
-		if (!(id in nations)) throw 'Nation was not found.';
-		return nations[id].password;
-	}
-
-	const { form } = createForm({
+	const { form: loginForm } = createForm<LoginFields>({
 		onSubmit: async (values) => {
-			await addNation(values.name, values.password);
-			isOpen = false;
-		}
+			let errors: Partial<LoginFields> = {};
+			const hash = await localForage.getItem('password');
+			if (await invoke('verify_password', { password: values.password, hash: hash })) {
+				password.set(values.password);
+				window.location.assign('/nations');
+			} else {
+				errors.password = 'Incorrect password.';
+			}
+			throw errors;
+		},
+		onError: (errors: any) => errors,
+		extend: reporter
+	});
+
+	type CreationFields = { password: string; verifyPassword: string };
+
+	const { form: creationForm } = createForm<CreationFields>({
+		onSubmit: async (values) => {
+			let errors: Partial<CreationFields> = {};
+			if (values.password === values.verifyPassword) {
+				password.set(values.password);
+				await localForage.setItem(
+					'password',
+					await invoke('hash_password', { password: values.password })
+				);
+				window.location.assign('/nations');
+			} else {
+				errors.verifyPassword = 'Passwords do not match.';
+			}
+			throw errors;
+		},
+		onError: (error: any) => error,
+		extend: reporter
 	});
 </script>
 
@@ -93,51 +56,40 @@
 	<h1 class="font-extrabold text-5xl text-amber-600 dark:text-amber-400">Vinta</h1>
 	<p>A tool to prep your puppets.</p>
 
-	<div>
-		<button type="button" on:click={() => (isOpen = true)}>Add Nation</button>
-	</div>
+	{#if hasPassword == null}
+		Loading...
+	{:else if hasPassword}
+		<p><strong>Log in</strong></p>
 
-	<Dialog
-		class="fixed inset-0 z-10 overflow-y-auto"
-		open={isOpen}
-		on:close={() => (isOpen = false)}
-	>
-		<div class="min-h-screen px-4 text-center">
-			<DialogOverlay class="fixed inset-0" />
+		<form use:loginForm>
+			<label for="password">Password</label>
+			<input type="password" name="password" id="password" placeholder="Password" required />
+			<ValidationMessage for="password" let:messages>
+				{messages?.[0] || ''}
+			</ValidationMessage>
 
-			<!-- This element is to trick the browser into centering the modal contents. -->
-			<span class="inline-block h-screen align-middle" aria-hidden="true"> &#8203; </span>
-			<div
-				class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-md rounded-lg border"
-			>
-				<DialogTitle class="text-lg font-medium leading-6 text-gray-900">Add Nation</DialogTitle>
+			<button type="submit">Submit</button>
+		</form>
+	{:else}
+		<p><strong>Create password</strong></p>
 
-				<form use:form>
-					<label for="name">Nation name</label>
-					<input name="name" type="text" required />
+		<form use:creationForm>
+			<label for="password">Password</label>
+			<input type="password" name="password" id="password" placeholder="Password" required />
 
-					<label for="password">Password</label>
-					<input name="password" type="password" required />
+			<label for="verifyPassword">Verify Password</label>
+			<input
+				type="password"
+				name="verifyPassword"
+				id="verifyPassword"
+				placeholder="Verify password"
+				required
+			/>
+			<ValidationMessage for="verifyPassword" let:messages>
+				{messages?.[0] || ''}
+			</ValidationMessage>
 
-					<button type="submit">Submit</button>
-				</form>
-			</div>
-		</div>
-	</Dialog>
-
-	{#if nations}
-		<h1 class="font-bold text-3xl text-amber-600 dark:text-amber-400 mt-4 mb-2">My Nations</h1>
-
-		<div>
-			{#each Object.entries(nations) as [id, nation]}
-				<div>
-					<button on:click={() => removeNation(id)}>[x]</button>
-					<button on:click={async () => await open(`https://nationstates.net/${id}`)}
-						><strong>{nation.name}</strong></button
-					>
-					{getPassword(id)}
-				</div>
-			{/each}
-		</div>
+			<button type="submit">Submit</button>
+		</form>
 	{/if}
 </div>
