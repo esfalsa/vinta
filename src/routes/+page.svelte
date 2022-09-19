@@ -41,6 +41,19 @@
 					'password',
 					await invoke('hash_password', { password: values.password })
 				);
+
+				const salt = await invoke('generate_salt');
+				localForage.setItem('salt', salt);
+
+				const [encrypted, nonce] = await invoke<[number[], number[]]>('encrypt', {
+					data: JSON.stringify([]),
+					password: values.password,
+					salt: salt
+				});
+
+				await localForage.setItem('nations', encrypted);
+				await localForage.setItem('nonce', nonce);
+
 				window.location.assign('/nations');
 			} else {
 				errors.verifyPassword = 'Passwords do not match.';

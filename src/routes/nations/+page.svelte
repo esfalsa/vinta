@@ -3,16 +3,11 @@
 	import { invoke } from '@tauri-apps/api/tauri';
 	import { open } from '@tauri-apps/api/shell';
 	import { onMount } from 'svelte';
-	import {
-		Dialog,
-		DialogOverlay,
-		DialogTitle,
-		DialogDescription
-	} from '@rgossiaux/svelte-headlessui';
+	import { Dialog, DialogOverlay, DialogTitle } from '@rgossiaux/svelte-headlessui';
 	import { createForm } from 'felte';
 	import * as localForage from 'localforage';
 
-	let nations: { [id: string]: Nation };
+	let nations: Nation[];
 
 	let isOpen = false;
 
@@ -29,10 +24,10 @@
 					salt: salt,
 					nonce: nonce
 				})
-			) ?? {};
+			) || [];
 	});
 
-	async function updateEncryptedNations(nations: { [id: string]: Nation }) {
+	async function updateEncryptedNations(nations: Nation[]) {
 		let salt = await localForage.getItem('salt');
 		if (!salt) {
 			salt = await invoke('generate_salt');
@@ -49,30 +44,23 @@
 	}
 
 	async function addNation(name: string, password: string) {
-		await updateEncryptedNations({
-			...nations,
-			[name.toLowerCase()]: {
-				name: name,
-				password: password
-			}
-		});
+		console.log(nations);
 
-		nations[name.toLowerCase()] = {
-			name: name,
-			password: password
-		};
-	}
-
-	async function removeNation(id: string) {
-		delete nations[id];
+		nations.push({ name, password });
 
 		await updateEncryptedNations(nations);
 		nations = nations;
 	}
 
-	function getPassword(id: string) {
-		if (!(id in nations)) throw 'Nation was not found.';
-		return nations[id].password;
+	async function removeNation(index: number) {
+		nations.splice(index, 1);
+
+		await updateEncryptedNations(nations);
+		nations = nations;
+	}
+
+	function getPassword(index: number) {
+		return nations[index].password;
 	}
 
 	const { form } = createForm({
@@ -118,17 +106,20 @@
 		</div>
 	</Dialog>
 
-	{#if nations}
-		<div>
-			{#each Object.entries(nations) as [id, nation]}
-				<div>
-					<button on:click={() => removeNation(id)}>[x]</button>
-					<button on:click={async () => await open(`https://nationstates.net/${id}`)}
-						><strong>{nation.name}</strong></button
-					>
-					{getPassword(id)}
-				</div>
-			{/each}
-		</div>
+	{#if nations == null}
+		Loading…
+	{:else if nations.length > 0}
+		{#each nations as nation, index}
+			<div>
+				<button on:click={() => removeNation(index)}>[x]</button>
+				<button on:click={async () => await open(`https://nationstates.net/${nation.name}`)}
+					><strong>{nation.name}</strong></button
+				>
+			</div>
+		{/each}
+
+		<a href="/prep">Start prepping</a>
+	{:else}
+		No nations found.
 	{/if}
 </div>

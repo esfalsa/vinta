@@ -13,6 +13,10 @@
 		"allowlist": {
 			"shell": {
 				"open": true
+			},
+			"http": {
+				"request": true,
+				"scope": ["https://www.nationstates.net/*"]
 			}
 		},
 		"bundle": {
