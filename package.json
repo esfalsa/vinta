@@ -11,9 +11,12 @@
 		"sveltekit:check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"sveltekit:check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "prettier --check . && eslint .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"prepare": "husky install"
 	},
 	"devDependencies": {
+		"@commitlint/cli": "^17.1.2",
+		"@commitlint/config-conventional": "^17.1.0",
 		"@rgossiaux/svelte-headlessui": "^1.0.2",
 		"@sveltejs/adapter-static": "^1.0.0-next.42",
 		"@sveltejs/kit": "^1.0.0-next.483",
@@ -25,6 +28,8 @@
 		"eslint": "^8.23.1",
 		"eslint-config-prettier": "^8.5.0",
 		"eslint-plugin-svelte3": "^4.0.0",
+		"husky": "^8.0.0",
+		"lint-staged": "^13.0.3",
 		"postcss": "^8.4.16",
 		"prettier": "^2.7.1",
 		"prettier-plugin-rust": "^0.1.8",
@@ -43,5 +48,9 @@
 		"@tauri-apps/api": "^1.1.0",
 		"felte": "^1.2.3",
 		"localforage": "^1.10.0"
+	},
+	"lint-staged": {
+		"*.js": "eslint --cache --fix",
+		"*.{js,css,md}": "prettier --write"
 	}
 }
