@@ -24,7 +24,12 @@
 				})
 			) || [];
 
-		prepper = await Prepper.initialize('Esfalsa', nations, 'Artificial Solar System');
+		const userAgent = await localForage.getItem<string | null>('userAgent');
+		const jumpPoint = await localForage.getItem<string | null>('jumpPoint');
+
+		if (userAgent && jumpPoint) {
+			prepper = await Prepper.initialize(userAgent, nations, jumpPoint);
+		}
 	});
 
 	async function prep() {
