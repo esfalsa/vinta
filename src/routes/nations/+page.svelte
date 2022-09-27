@@ -72,7 +72,7 @@
 </script>
 
 <div class="p-8">
-	<h1 class="font-bold text-3xl text-amber-600 dark:text-amber-400 mt-4 mb-2">My Nations</h1>
+	<h1 class="mt-4 mb-2 text-3xl font-bold text-amber-600 dark:text-amber-400">My Nations</h1>
 
 	<div>
 		<button type="button" on:click={() => (isOpen = true)}>Add Nation</button>
@@ -89,9 +89,9 @@
 			<!-- This element is to trick the browser into centering the modal contents. -->
 			<span class="inline-block h-screen align-middle" aria-hidden="true"> &#8203; </span>
 			<div
-				class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-white shadow-md rounded-lg border"
+				class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle bg-white border rounded-lg shadow-md transition-all transform"
 			>
-				<DialogTitle class="text-lg font-medium leading-6 text-gray-900">Add Nation</DialogTitle>
+				<DialogTitle class="text-lg font-medium text-gray-900 leading-6">Add Nation</DialogTitle>
 
 				<form use:form>
 					<label for="name">Nation name</label>

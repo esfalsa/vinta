@@ -23,7 +23,7 @@
 				errors.userAgent = 'Please enter an user agent.';
 			}
 
-			if (Object.keys(errors).length === 0) throw errors;
+			if (Object.keys(errors).length !== 0) throw errors;
 		},
 		onError: (errors: any) => errors,
 		extend: reporter
@@ -31,7 +31,7 @@
 </script>
 
 <div class="p-8">
-	<h1 class="font-extrabold text-5xl text-amber-600 dark:text-amber-400">Preferences</h1>
+	<h1 class="text-amber-600 dark:text-amber-400 text-5xl font-extrabold">Preferences</h1>
 
 	{#await localForage.getItem('userAgent') then userAgent}
 		{userAgent}

@@ -40,7 +40,7 @@
 </script>
 
 <div class="p-8">
-	<h1 class="font-bold text-3xl text-amber-600 dark:text-amber-400 mt-4 mb-2">Prep Nations</h1>
+	<h1 class="mt-4 mb-2 text-3xl font-bold text-amber-600 dark:text-amber-400">Prep Nations</h1>
 
 	{#if nations == null}
 		Loading…

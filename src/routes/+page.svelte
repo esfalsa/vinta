@@ -66,7 +66,7 @@
 </script>
 
 <div class="p-8">
-	<h1 class="font-extrabold text-5xl text-amber-600 dark:text-amber-400">Vinta</h1>
+	<h1 class="text-5xl font-extrabold text-amber-600 dark:text-amber-400">Vinta</h1>
 	<p>A tool to prep your puppets.</p>
 
 	{#if hasPassword == null}
