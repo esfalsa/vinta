@@ -9,8 +9,8 @@
 		password: string;
 	};
 
-	const { form, isSubmitting } = createForm({
-		onSubmit: async (values: SetupFields) => {
+	const { form, isSubmitting } = createForm<SetupFields>({
+		onSubmit: async (values) => {
 			await localForage.setItem('userAgent', values.userAgent);
 			password.set(values.password);
 			await localForage.setItem(
