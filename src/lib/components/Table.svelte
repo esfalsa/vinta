@@ -29,10 +29,6 @@
 	$: table = createSvelteTable($options);
 
 	$: selected = $table?.getSelectedRowModel().rows.map((row) => row.index) || [];
-
-	onDestroy(() => {
-		selected = [];
-	});
 </script>
 
 <div class="overflow-hidden overflow-x-auto border border-stone-200 rounded-lg">
