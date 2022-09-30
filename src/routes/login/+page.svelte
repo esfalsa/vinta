@@ -4,6 +4,7 @@
 	import * as localForage from 'localforage';
 	import { createForm } from 'felte';
 	import { reporter, ValidationMessage } from '@felte/reporter-svelte';
+	import Button from '$lib/components/Button.svelte';
 
 	if ($password) {
 		window.location.assign('/nations');
@@ -30,10 +31,10 @@
 	});
 </script>
 
-<div class="text-stone-900 flex flex-col justify-center h-screen max-w-2xl p-8 mx-auto">
-	<div class="mb-12 space-y-4 text-center">
+<div class="flex flex-col justify-center h-screen max-w-2xl p-8 mx-auto text-stone-900">
+	<div class="mb-12 text-center space-y-4">
 		<h1 class="text-6xl font-semibold tracking-tight">Welcome back!</h1>
-		<h2 class="text-stone-600 text-3xl">Enter your password to continue.</h2>
+		<h2 class="text-3xl text-stone-600">Enter your password to continue.</h2>
 	</div>
 
 	<form use:form class="flex flex-col w-full max-w-sm mx-auto">
@@ -42,7 +43,7 @@
 			placeholder="Password"
 			name="password"
 			id="password"
-			class="border-1 border-stone-300 w-full mt-1 border rounded-md shadow"
+			class="w-full mt-1 border shadow border-1 border-stone-300 rounded-md"
 			required
 		/>
 		<div class="text-red-400">
@@ -51,12 +52,8 @@
 			</ValidationMessage>
 		</div>
 
-		<button
-			type="submit"
-			class="text-orange-50 mt-4 disabled:bg-orange-200 px-3 py-2 font-medium bg-orange-400 rounded-md shadow"
-			disabled={$isSubmitting}
-		>
-			{$isSubmitting ? 'Loading…' : 'Continue'}
-		</button>
+		<Button type="submit" disabled={$isSubmitting} class="mt-4">
+			{$isSubmitting ? 'Loading…' : 'Log In'}
+		</Button>
 	</form>
 </div>

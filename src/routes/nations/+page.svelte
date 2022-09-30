@@ -1,11 +1,14 @@
 <script lang="ts">
-	import { password } from '$lib/stores';
+	import { password, selected } from '$lib/stores';
 	import { invoke } from '@tauri-apps/api/tauri';
 	import { open } from '@tauri-apps/api/shell';
 	import { onMount } from 'svelte';
-	import { Dialog, DialogOverlay, DialogTitle } from '@rgossiaux/svelte-headlessui';
 	import { createForm } from 'felte';
 	import * as localForage from 'localforage';
+	import Button from '$lib/components/Button.svelte';
+	import Input from '$lib/components/Input.svelte';
+	import Dialog from '$lib/components/Dialog.svelte';
+	import Table from '$lib/components/Table.svelte';
 
 	let nations: Nation[];
 
@@ -44,8 +47,6 @@
 	}
 
 	async function addNation(name: string, password: string) {
-		console.log(nations);
-
 		nations.push({ name, password });
 
 		await updateEncryptedNations(nations);
@@ -59,67 +60,87 @@
 		nations = nations;
 	}
 
+	async function removeNations(indices: number[]) {
+		for (let i = indices.length; i >= 0; i--) {
+			nations.splice(indices[i], 1);
+		}
+
+		await updateEncryptedNations(nations);
+		nations = nations;
+	}
+
 	function getPassword(index: number) {
 		return nations[index].password;
 	}
 
-	const { form } = createForm({
+	const { form, isSubmitting } = createForm({
 		onSubmit: async (values) => {
 			await addNation(values.name, values.password);
 			isOpen = false;
 		}
 	});
+
+	const columns = [
+		{
+			accessorKey: 'name',
+			header: () => 'Nation Name'
+		}
+	];
+
+	$: console.log($selected);
 </script>
 
-<div class="p-8">
-	<h1 class="mt-4 mb-2 text-3xl font-bold text-amber-600 dark:text-amber-400">My Nations</h1>
-
-	<div>
-		<button type="button" on:click={() => (isOpen = true)}>Add Nation</button>
-	</div>
-
-	<Dialog
-		class="fixed inset-0 z-10 overflow-y-auto"
-		open={isOpen}
-		on:close={() => (isOpen = false)}
-	>
-		<div class="min-h-screen px-4 text-center">
-			<DialogOverlay class="fixed inset-0" />
-
-			<!-- This element is to trick the browser into centering the modal contents. -->
-			<span class="inline-block h-screen align-middle" aria-hidden="true"> &#8203; </span>
-			<div
-				class="inline-block w-full max-w-md p-6 my-8 overflow-hidden text-left align-middle bg-white border rounded-lg shadow-md transition-all transform"
+<div class="flex w-full h-screen">
+	<!-- <div class="w-96 bg-stone-100 flex-0 flex flex-col h-full p-8">
+		<Button type="button" on:click={() => (isOpen = true)}>Add Nation</Button>
+	</div> -->
+	<div class="flex-1 shadow-lg">
+		<div class="flex flex-row p-6 space-x-6 shadow">
+			<Button type="button" on:click={() => (isOpen = true)}>Add Nation</Button>
+			<Button
+				color="light"
+				disabled={$selected.length === 0}
+				href={$selected.length ? '/prep' : undefined}>Prep Selected</Button
 			>
-				<DialogTitle class="text-lg font-medium text-gray-900 leading-6">Add Nation</DialogTitle>
-
-				<form use:form>
-					<label for="name">Nation name</label>
-					<input name="name" type="text" required />
-
-					<label for="password">Password</label>
-					<input name="password" type="password" required />
-
-					<button type="submit">Submit</button>
-				</form>
-			</div>
+			<Button
+				color="light"
+				disabled={$selected.length === 0}
+				on:click={() => {
+					removeNations($selected);
+				}}
+			>
+				Delete Selected
+			</Button>
 		</div>
-	</Dialog>
-
-	{#if nations == null}
-		Loading…
-	{:else if nations.length > 0}
-		{#each nations as nation, index}
-			<div>
-				<button on:click={() => removeNation(index)}>[x]</button>
-				<button on:click={async () => await open(`https://nationstates.net/${nation.name}`)}
-					><strong>{nation.name}</strong></button
-				>
-			</div>
-		{/each}
-
-		<a href="/prep">Start prepping</a>
-	{:else}
-		No nations found.
-	{/if}
+		<div class="p-8">
+			{#if nations == null}
+				Loading nations…
+			{:else if nations.length > 0}
+				<Table bind:data={nations} {columns} bind:selected={$selected} />
+			{:else}
+				No nations found. <button on:click={() => (isOpen = true)} class="text-orange-400"
+					>Add one
+				</button> to get started!
+			{/if}
+		</div>
+	</div>
 </div>
+
+<Dialog open={isOpen} on:close={() => (isOpen = false)} title="Add Nation">
+	<form use:form>
+		<div>
+			<label class="text-stone-700 font-medium" for="name">Nation name</label>
+			<Input class="mt-0.5 w-full" name="name" id="name" type="text" required />
+		</div>
+
+		<div class="mt-2">
+			<label class="text-stone-700 font-medium" for="password">Password</label>
+			<Input class="mt-0.5 w-full" name="password" id="password" type="password" required />
+		</div>
+
+		<div class="mt-6 space-x-2">
+			<Button type="submit" disabled={$isSubmitting}>Submit</Button>
+			<Button color="light" on:click={() => (isOpen = false)}>Cancel</Button>
+		</div>
+	</form>
+</Dialog>

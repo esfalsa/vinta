@@ -10,7 +10,7 @@
 </script>
 
 {#if visible}
-	<div role="status" transition:fade={{ delay: 500 }}>
+	<div role="status" transition:fade={{ delay: 200 }}>
 		<svg
 			aria-hidden="true"
 			class="w-16 h-16 text-gray-200 animate-spin fill-orange-400"

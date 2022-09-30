@@ -3,6 +3,8 @@
 	import { invoke } from '@tauri-apps/api/tauri';
 	import * as localForage from 'localforage';
 	import { createForm } from 'felte';
+	import Button from '$lib/components/Button.svelte';
+	import Input from '$lib/components/Input.svelte';
 
 	type SetupFields = {
 		userAgent: string;
@@ -35,15 +37,15 @@
 	});
 </script>
 
-<div class="text-stone-900 flex flex-col justify-center h-screen max-w-2xl p-8 mx-auto">
-	<div class="mb-12 space-y-4 text-center">
+<div class="flex flex-col justify-center h-screen max-w-2xl p-8 mx-auto text-stone-900">
+	<div class="mb-12 text-center space-y-4">
 		<h1 class="text-6xl font-semibold tracking-tight">
 			Welcome to <span
-				class="bg-clip-text bg-gradient-to-br from-orange-500 to-yellow-500 font-black text-transparent"
+				class="font-black text-transparent bg-clip-text bg-gradient-to-br from-orange-500 to-yellow-500"
 				>Vinta</span
 			>!
 		</h1>
-		<h2 class="text-stone-600 text-3xl">Let’s get you set up.</h2>
+		<h2 class="text-3xl text-stone-600">Let’s get you set up.</h2>
 	</div>
 
 	<form use:form class="space-y-6">
@@ -53,12 +55,12 @@
 				This is how we’ll identify you to NationStates, so it should be something identifiable to
 				you like your nation name or an email address.
 			</p>
-			<input
+			<Input
 				type="text"
 				placeholder="Testlandia"
 				name="userAgent"
 				id="userAgent"
-				class="border-1 border-stone-300 w-full mt-2 border rounded-md shadow"
+				class="mt-2 w-full"
 				required
 			/>
 		</div>
@@ -69,22 +71,18 @@
 				Your password never leaves your device. This also means you won’t be able to recover your
 				data if you forget your password, so be careful!
 			</p>
-			<input
+			<Input
 				type="password"
 				placeholder="hunter2"
 				name="password"
 				id="password"
-				class="border-1 border-stone-300 w-full mt-2 border rounded-md shadow"
+				class="mt-2 w-full"
 				required
 			/>
 		</div>
 
-		<button
-			type="submit"
-			class="text-orange-50 disabled:bg-orange-200 px-3 py-2 font-medium bg-orange-400 rounded-md shadow"
-			disabled={$isSubmitting}
-		>
+		<Button type="submit" disabled={$isSubmitting}>
 			{$isSubmitting ? 'Loading…' : 'Continue'}
-		</button>
+		</Button>
 	</form>
 </div>

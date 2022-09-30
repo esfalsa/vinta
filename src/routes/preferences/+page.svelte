@@ -31,7 +31,7 @@
 </script>
 
 <div class="p-8">
-	<h1 class="text-amber-600 dark:text-amber-400 text-5xl font-extrabold">Preferences</h1>
+	<h1 class="text-5xl font-extrabold text-amber-600 dark:text-amber-400">Preferences</h1>
 
 	{#await localForage.getItem('userAgent') then userAgent}
 		{userAgent}

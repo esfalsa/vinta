@@ -60,11 +60,11 @@
 		},
 		"windows": [
 			{
-				"fullscreen": false,
-				"height": 600,
+				"width": 1000,
+				"height": 800,
+				"maximized": true,
 				"resizable": true,
-				"title": "Vinta",
-				"width": 800
+				"title": "Vinta"
 			}
 		]
 	}
