@@ -61,12 +61,20 @@
 	}
 
 	async function removeNations(indices: number[]) {
-		for (let i = indices.length; i >= 0; i--) {
+		console.log('original nations', nations);
+		console.log('removing indices', indices);
+		for (let i = indices.length - 1; i >= 0; i--) {
 			nations.splice(indices[i], 1);
+			$selected = [
+				...$selected.slice(0, indices[i]),
+				...$selected.slice(indices[i] + 1).map((index) => index - 1)
+			];
+			console.log('new $selected', $selected);
 		}
 
 		await updateEncryptedNations(nations);
 		nations = nations;
+		console.log('nations', nations);
 	}
 
 	function getPassword(index: number) {
