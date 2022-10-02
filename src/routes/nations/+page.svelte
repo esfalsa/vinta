@@ -1,25 +1,24 @@
 <script lang="ts">
-	import { password, selected } from '$lib/stores';
+	import { password, selected, nations } from '$lib/stores';
 	import { invoke } from '@tauri-apps/api/tauri';
-	import { open } from '@tauri-apps/api/shell';
 	import { onMount } from 'svelte';
-	import { createForm } from 'felte';
 	import * as localForage from 'localforage';
 	import Button from '$lib/components/Button.svelte';
-	import Input from '$lib/components/Input.svelte';
-	import Dialog from '$lib/components/Dialog.svelte';
 	import Table from '$lib/components/Table.svelte';
+	import PrepDialog from '$lib/components/PrepDialog.svelte';
+	import AddNationDialog from '$lib/components/AddNationDialog.svelte';
 
-	let nations: Nation[];
+	// let nations: Nation[];
 
-	let isOpen = false;
+	let showAddNationDialog = false;
+	let showPrepDialog = false;
 
 	onMount(async () => {
 		const encryptedNations = (await localForage.getItem('nations')) ?? [];
 		const salt = await localForage.getItem('salt');
 		const nonce = await localForage.getItem('nonce');
 
-		nations =
+		$nations =
 			JSON.parse(
 				await invoke('decrypt', {
 					data: encryptedNations,
@@ -28,6 +27,8 @@
 					nonce: nonce
 				})
 			) || [];
+
+		console.log($nations);
 	});
 
 	async function updateEncryptedNations(nations: Nation[]) {
@@ -46,47 +47,29 @@
 		await localForage.setItem('nonce', nonce);
 	}
 
-	async function addNation(name: string, password: string) {
-		nations.push({ name, password });
-
-		await updateEncryptedNations(nations);
-		nations = nations;
-	}
-
 	async function removeNation(index: number) {
-		nations.splice(index, 1);
+		$nations.splice(index, 1);
 
-		await updateEncryptedNations(nations);
-		nations = nations;
+		await updateEncryptedNations($nations);
+		$nations = $nations;
 	}
 
 	async function removeNations(indices: number[]) {
-		console.log('original nations', nations);
-		console.log('removing indices', indices);
 		for (let i = indices.length - 1; i >= 0; i--) {
-			nations.splice(indices[i], 1);
+			$nations.splice(indices[i], 1);
 			$selected = [
 				...$selected.slice(0, indices[i]),
 				...$selected.slice(indices[i] + 1).map((index) => index - 1)
 			];
-			console.log('new $selected', $selected);
 		}
 
-		await updateEncryptedNations(nations);
-		nations = nations;
-		console.log('nations', nations);
+		await updateEncryptedNations($nations);
+		$nations = $nations;
 	}
 
 	function getPassword(index: number) {
-		return nations[index].password;
+		return $nations[index].password;
 	}
-
-	const { form, isSubmitting } = createForm({
-		onSubmit: async (values) => {
-			await addNation(values.name, values.password);
-			isOpen = false;
-		}
-	});
 
 	const columns = [
 		{
@@ -94,8 +77,6 @@
 			header: () => 'Nation Name'
 		}
 	];
-
-	$: console.log($selected);
 </script>
 
 <div class="flex w-full h-screen">
@@ -104,11 +85,11 @@
 	</div> -->
 	<div class="flex-1 shadow-lg">
 		<div class="flex flex-row p-6 space-x-6 shadow">
-			<Button type="button" on:click={() => (isOpen = true)}>Add Nation</Button>
+			<Button type="button" on:click={() => (showAddNationDialog = true)}>Add Nation</Button>
 			<Button
 				color="light"
 				disabled={$selected.length === 0}
-				href={$selected.length ? '/prep' : undefined}>Prep Selected</Button
+				on:click={() => (showPrepDialog = true)}>Prep Selected</Button
 			>
 			<Button
 				color="light"
@@ -121,12 +102,14 @@
 			</Button>
 		</div>
 		<div class="p-8">
-			{#if nations == null}
+			{#if $nations == null}
 				Loading nations…
-			{:else if nations.length > 0}
-				<Table bind:data={nations} {columns} bind:selected={$selected} />
+			{:else if $nations.length > 0}
+				<Table bind:data={$nations} {columns} bind:selected={$selected} />
 			{:else}
-				No nations found. <button on:click={() => (isOpen = true)} class="text-orange-400"
+				No nations found. <button
+					on:click={() => (showAddNationDialog = true)}
+					class="text-orange-400"
 					>Add one
 				</button> to get started!
 			{/if}
@@ -134,21 +117,6 @@
 	</div>
 </div>
 
-<Dialog open={isOpen} on:close={() => (isOpen = false)} title="Add Nation">
-	<form use:form>
-		<div>
-			<label class="text-stone-700 font-medium" for="name">Nation name</label>
-			<Input class="mt-0.5 w-full" name="name" id="name" type="text" required />
-		</div>
+<AddNationDialog bind:open={showAddNationDialog} on:close={() => (showAddNationDialog = false)} />
 
-		<div class="mt-2">
-			<label class="text-stone-700 font-medium" for="password">Password</label>
-			<Input class="mt-0.5 w-full" name="password" id="password" type="password" required />
-		</div>
-
-		<div class="mt-6 space-x-2">
-			<Button type="submit" disabled={$isSubmitting}>Submit</Button>
-			<Button color="light" on:click={() => (isOpen = false)}>Cancel</Button>
-		</div>
-	</form>
-</Dialog>
+<PrepDialog bind:open={showPrepDialog} on:close={() => (showPrepDialog = false)} />

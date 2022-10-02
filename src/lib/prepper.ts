@@ -49,14 +49,10 @@ export class Prepper {
 			}
 		);
 
-		// console.log(headers);
-
 		this.#currentChk =
 			data.match(/<input type="hidden" name="chk" value="(?<chk>.+)">/)?.groups?.chk ?? '';
 		this.#currentPin = headers?.['set-cookie'].match(/pin=(?<pin>\d+?)(?=;|$)/)?.groups?.pin ?? '';
 		this.#currentLocalId = '';
-
-		console.log(this.#currentChk);
 
 		this.prep = this.apply;
 	}
@@ -92,13 +88,9 @@ export class Prepper {
 			}
 		);
 
-		// console.log(data);
-
 		this.#currentLocalId =
 			data.match(/<input type="hidden" name="localid" value="(?<localid>.+)">/)?.groups?.localid ??
 			'';
-
-		console.log('localid', this.#currentLocalId);
 
 		this.prep = this.move;
 	}

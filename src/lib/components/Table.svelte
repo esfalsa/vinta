@@ -3,7 +3,6 @@
 	import { createSvelteTable, flexRender, getCoreRowModel } from '@tanstack/svelte-table';
 	import type { ColumnDef, TableOptions } from '@tanstack/svelte-table';
 	import Input from './Input.svelte';
-	import { onDestroy } from 'svelte';
 
 	type T = $$Generic;
 
