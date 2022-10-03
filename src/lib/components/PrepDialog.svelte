@@ -9,10 +9,14 @@
 	let selectedNations: Nation[];
 	let prepper: Prepper;
 	let disabled = false;
+	let userAgent: string | null;
+	let jumpPoint: string | null;
 
 	async function loadPrepper() {
-		const userAgent = await localForage.getItem<string | null>('userAgent');
-		const jumpPoint = await localForage.getItem<string | null>('jumpPoint');
+		await localForage.removeItem('jumpPoint');
+
+		userAgent = await localForage.getItem<string | null>('userAgent');
+		jumpPoint = await localForage.getItem<string | null>('jumpPoint');
 
 		selectedNations = $nations.filter((_nation, index) => $selected.includes(index));
 
@@ -35,7 +39,21 @@
 </script>
 
 <Dialog bind:open on:close={close} title="Prep Nations">
-	{#if selectedNations == null}
+	{#if !userAgent || !jumpPoint}
+		<div class="space-y-2">
+			<div>
+				You seem to be missing a user agent and/or jump point. <a
+					href="/preferences"
+					class="text-orange-400">Set them in your preferences</a
+				>
+				to prep your nations.
+			</div>
+			<div class="space-x-2">
+				<Button href="/preferences">Open Preferences</Button>
+				<Button color="light" on:click={close}>Cancel</Button>
+			</div>
+		</div>
+	{:else if selectedNations == null}
 		Loading…
 	{:else if selectedNations.length > 0}
 		{selectedNations.length > 1

@@ -84,22 +84,27 @@
 		<Button type="button" on:click={() => (isOpen = true)}>Add Nation</Button>
 	</div> -->
 	<div class="flex-1 shadow-lg">
-		<div class="flex flex-row p-6 space-x-6 shadow">
-			<Button type="button" on:click={() => (showAddNationDialog = true)}>Add Nation</Button>
-			<Button
-				color="light"
-				disabled={$selected.length === 0}
-				on:click={() => (showPrepDialog = true)}>Prep Selected</Button
-			>
-			<Button
-				color="light"
-				disabled={$selected.length === 0}
-				on:click={() => {
-					removeNations($selected);
-				}}
-			>
-				Delete Selected
-			</Button>
+		<div class="flex flex-row p-6 shadow">
+			<div class="space-x-6">
+				<Button type="button" on:click={() => (showAddNationDialog = true)}>Add Nation</Button>
+				<Button
+					color="light"
+					disabled={$selected.length === 0}
+					on:click={() => (showPrepDialog = true)}>Prep Selected</Button
+				>
+				<Button
+					color="light"
+					disabled={$selected.length === 0}
+					on:click={() => {
+						removeNations($selected);
+					}}
+				>
+					Delete Selected
+				</Button>
+			</div>
+			<div class="ml-auto flex items-center">
+				<a href="/preferences" class="text-orange-400">Preferences</a>
+			</div>
 		</div>
 		<div class="p-8">
 			{#if $nations == null}
